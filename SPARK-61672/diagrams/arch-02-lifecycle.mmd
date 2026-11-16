@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant P as Planner
+  participant O as Optimizer
+  participant X as AsyncEvalExec
+  participant F as Provider function
+  participant E as Endpoint
+  P->>O: resolved plan with ApplyAsyncFunctionExpression
+  O->>O: ExtractAsyncFunctions to EvalAsyncFunctions node
+  O->>O: push LIMIT and safe child filters below the node
+  P->>X: physical plan with AsyncEvalExec
+  loop per input row (bounded)
+    X->>F: produceResultAsync(row), non-blocking
+    F->>E: provider request
+  end
+  E-->>F: responses complete in any order
+  F-->>X: futures complete
+  X-->>P: emit rows in input order

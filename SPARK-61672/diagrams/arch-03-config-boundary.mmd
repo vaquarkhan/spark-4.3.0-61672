@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph Immutable["Immutable cluster config (launch time)"]
+    CEIL["spark.sql.asyncFunction.maxInFlightCeiling"]
+    ALLOW["spark.ai.PROVIDER.allowedModels, allowedBaseUrls, allowedRegions"]
+  end
+  subgraph Session["Catalog options (spark.sql.catalog.ai.*)"]
+    OPT["endpoint, model, timeouts, requested concurrency"]
+  end
+  OPT -->|clamped and allowlisted by| RESOLVER["provider settings resolver"]
+  Immutable -->|hard limits| RESOLVER
+  RESOLVER --> BOUND["bound function shipped to executors"]
+  CRED["executor credential chain or env token"] --> BOUND

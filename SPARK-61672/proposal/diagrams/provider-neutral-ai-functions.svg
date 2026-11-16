@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Provider-neutral AI functions in Apache Spark</title>
+  <desc id="desc">A Spark SQL query flows through a provider-neutral asynchronous engine to interchangeable Bedrock, OpenAI-compatible, Databricks, and future provider adapters.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/><stop offset="1" stop-color="#111c36"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#f04b35"/>
+    </linearGradient>
+    <linearGradient id="engine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#176b87"/><stop offset="1" stop-color="#114a68"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".35"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#63d5b0"/>
+    </marker>
+    <style>
+      .title{font:700 46px 'Segoe UI',Arial,sans-serif;fill:#f4f7ff}.subtitle{font:400 24px 'Segoe UI',Arial,sans-serif;fill:#aebbd4}.h{font:700 27px 'Segoe UI',Arial,sans-serif;fill:#fff}.t{font:400 21px 'Segoe UI',Arial,sans-serif;fill:#dbe4f5}.small{font:400 18px 'Segoe UI',Arial,sans-serif;fill:#b9c6de}.mono{font:600 21px Consolas,monospace;fill:#8be9fd}.label{font:700 17px 'Segoe UI',Arial,sans-serif;fill:#63d5b0;letter-spacing:1.5px}.box{stroke:#314467;stroke-width:2}.line{stroke:#63d5b0;stroke-width:5;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <text x="80" y="75" class="title">One Spark AI function, interchangeable providers</text>
+  <text x="80" y="114" class="subtitle">Spark owns safe execution. Provider modules own credentials and wire formats.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="80" y="190" width="310" height="230" rx="24" fill="#121d34" class="box"/>
+    <rect x="80" y="190" width="310" height="58" rx="24" fill="url(#spark)"/>
+    <text x="110" y="228" class="h">User surface</text>
+    <text x="110" y="285" class="mono">ai.generate(prompt)</text>
+    <text x="110" y="325" class="t">SQL • Scala • Java</text>
+    <text x="110" y="357" class="t">PySpark • Spark Connect</text>
+    <text x="110" y="394" class="small">Same query when provider changes</text>
+  </g>
+
+  <path d="M390 305 H470" class="line"/>
+  <text x="410" y="285" class="label">RESOLVE</text>
+
+  <g filter="url(#shadow)">
+    <rect x="480" y="155" width="550" height="405" rx="28" fill="url(#engine)" class="box"/>
+    <text x="520" y="208" class="h">Provider-neutral Spark engine</text>
+    <text x="520" y="249" class="mono">AsyncScalarFunction: row → future</text>
+
+    <rect x="520" y="280" width="220" height="95" rx="16" fill="#0c344b" stroke="#48b9d5"/>
+    <text x="545" y="320" class="h">Catalyst</text>
+    <text x="545" y="351" class="small">resolve • extract • plan</text>
+
+    <rect x="770" y="280" width="220" height="95" rx="16" fill="#0c344b" stroke="#48b9d5"/>
+    <text x="795" y="320" class="h">AsyncEvalExec</text>
+    <text x="795" y="351" class="small">one row in • one row out</text>
+
+    <rect x="520" y="405" width="220" height="105" rx="16" fill="#0c344b" stroke="#63d5b0"/>
+    <text x="545" y="443" class="h">Two bounds</text>
+    <text x="545" y="474" class="small">active calls + reorder window</text>
+    <text x="545" y="498" class="small">prevents cost and memory runaway</text>
+
+    <rect x="770" y="405" width="220" height="105" rx="16" fill="#0c344b" stroke="#63d5b0"/>
+    <text x="795" y="443" class="h">Safe lifecycle</text>
+    <text x="795" y="474" class="small">input order • spill • cancel</text>
+    <text x="795" y="498" class="small">truthful determinism</text>
+  </g>
+
+  <path d="M1030 355 H1110" class="line"/>
+  <text x="1044" y="335" class="label">ADAPT</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1120" y="150" width="400" height="500" rx="28" fill="#121d34" class="box"/>
+    <text x="1160" y="203" class="h">Provider modules</text>
+    <text x="1160" y="235" class="small">Cloud code stays outside Spark core</text>
+
+    <rect x="1160" y="270" width="320" height="70" rx="15" fill="#152b48" stroke="#ffba5c"/>
+    <text x="1190" y="300" class="h">Amazon Bedrock</text>
+    <text x="1190" y="326" class="small">AWS SDK v2</text>
+
+    <rect x="1160" y="360" width="320" height="70" rx="15" fill="#152b48" stroke="#65d6a7"/>
+    <text x="1190" y="390" class="h">OpenAI compatible</text>
+    <text x="1190" y="416" class="small">JDK HTTPS client</text>
+
+    <rect x="1160" y="450" width="320" height="70" rx="15" fill="#152b48" stroke="#9b8cff"/>
+    <text x="1190" y="480" class="h">Databricks</text>
+    <text x="1190" y="506" class="small">SDK or HTTPS client</text>
+
+    <rect x="1160" y="540" width="320" height="70" rx="15" fill="#152b48" stroke="#7fa9d9" stroke-dasharray="8 7"/>
+    <text x="1190" y="570" class="h">Claude / future</text>
+    <text x="1190" y="596" class="small">provider adapter</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="80" y="690" width="1440" height="220" rx="25" fill="#0d172a" stroke="#2c4166" stroke-width="2"/>
+    <text x="120" y="745" class="h">Administrator-controlled configuration</text>
+
+    <rect x="120" y="775" width="250" height="90" rx="14" fill="#14233d"/>
+    <text x="145" y="811" class="label">PROVIDER</text><text x="145" y="843" class="t">catalog class</text>
+
+    <rect x="400" y="775" width="250" height="90" rx="14" fill="#14233d"/>
+    <text x="425" y="811" class="label">DESTINATION</text><text x="425" y="843" class="t">allowed endpoint / model</text>
+
+    <rect x="680" y="775" width="250" height="90" rx="14" fill="#14233d"/>
+    <text x="705" y="811" class="label">IDENTITY</text><text x="705" y="843" class="t">executor credential chain</text>
+
+    <rect x="960" y="775" width="250" height="90" rx="14" fill="#14233d"/>
+    <text x="985" y="811" class="label">COST CEILING</text><text x="985" y="843" class="t">calls • attempts • time</text>
+
+    <rect x="1240" y="775" width="240" height="90" rx="14" fill="#14233d"/>
+    <text x="1265" y="811" class="label">ERROR FORM</text><text x="1265" y="843" class="t">strict • try • status</text>
+  </g>
+
+  <path d="M800 690 V575" stroke="#63d5b0" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
+  <text x="820" y="642" class="small">session cannot widen these rules</text>
+
+  <text x="80" y="962" class="small">Evidence: 5 end-to-end + 7 provider parity + 8 safety tests; live Bedrock uses typed Converse on Nova Micro.</text>
+</svg>

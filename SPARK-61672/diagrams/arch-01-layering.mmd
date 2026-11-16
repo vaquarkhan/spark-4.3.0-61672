@@ -1,0 +1,26 @@
+flowchart TB
+  subgraph User["Query author"]
+    SQL["SELECT ai.generate(review) FROM reviews"]
+  end
+  subgraph Core["Spark core (no cloud SDK)"]
+    RES["FunctionResolution"]
+    EXPR["ApplyAsyncFunctionExpression (unevaluable)"]
+    EXT["ExtractAsyncFunctions optimizer rule"]
+    LOG["EvalAsyncFunctions logical node"]
+    EXEC["AsyncEvalExec physical operator"]
+    SPI["AsyncScalarFunction SPI"]
+  end
+  subgraph Providers["Provider modules (separate artifacts)"]
+    OAI["ai-openai: OpenAIFunctionCatalog"]
+    BR["ai-bedrock: BedrockFunctionCatalog"]
+  end
+  subgraph Clouds["External endpoints"]
+    EP1["OpenAI-compatible HTTP"]
+    EP2["Amazon Bedrock Converse"]
+  end
+  SQL --> RES --> EXPR --> EXT --> LOG --> EXEC
+  EXEC --> SPI
+  OAI -. implements .-> SPI
+  BR -. implements .-> SPI
+  EXEC --> OAI --> EP1
+  EXEC --> BR --> EP2
