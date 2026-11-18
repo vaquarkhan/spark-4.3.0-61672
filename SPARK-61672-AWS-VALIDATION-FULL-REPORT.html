@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="SPARK-61672 AWS one-million-row validation report">
+<title>SPARK-61672 AWS Validation</title>
+<style>
+:root {
+  --ink: #13213c; --muted: #52627a; --line: #dce4ef; --panel: #ffffff;
+  --bg: #f5f8fc; --blue: #2563eb; --cyan: #0891b2; --orange: #ea580c;
+  --purple: #7c3aed; --success: #0f766e; --soft-blue: #eff6ff;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.62 Inter, Segoe UI, Arial, sans-serif; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+nav { position: sticky; top: 0; z-index: 20; background: rgba(19,33,60,.96); color: white; box-shadow: 0 2px 12px rgba(15,23,42,.18); }
+.nav-inner { max-width: 1280px; margin: auto; padding: 12px 28px; display: flex; gap: 22px; align-items: center; overflow-x: auto; }
+.nav-title { font-weight: 800; white-space: nowrap; margin-right: auto; }
+nav a { color: #dbeafe; font-size: 14px; white-space: nowrap; }
+.hero { color: white; background: linear-gradient(125deg, #101d38 0%, #173b78 58%, #075f74 100%); padding: 72px 28px 64px; }
+.hero-inner, main { max-width: 1280px; margin: auto; }
+.eyebrow { letter-spacing: .13em; text-transform: uppercase; font-weight: 800; font-size: 13px; color: #93c5fd; }
+h1 { font-size: clamp(38px, 6vw, 72px); line-height: 1.05; max-width: 970px; margin: 12px 0 20px; }
+.hero p { max-width: 870px; font-size: 20px; color: #dbeafe; }
+.hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.badge { border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); padding: 8px 13px; border-radius: 999px; font-weight: 700; }
+main { padding: 34px 28px 80px; }
+section { scroll-margin-top: 74px; margin: 28px 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 8px 28px rgba(30,41,59,.07); }
+.card + .card { margin-top: 22px; }
+h2 { font-size: 32px; margin: 0 0 18px; }
+h3 { font-size: 22px; margin: 28px 0 12px; }
+h4 { font-size: 17px; margin: 20px 0 8px; }
+.lead { font-size: 19px; color: var(--muted); }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin: 24px 0; }
+.metric { padding: 22px; border-radius: 15px; background: white; border-top: 5px solid var(--blue); box-shadow: 0 5px 18px rgba(30,41,59,.08); }
+.metric:nth-child(2) { border-color: var(--orange); }
+.metric:nth-child(3) { border-color: var(--cyan); }
+.metric:nth-child(4) { border-color: var(--purple); }
+.metric strong { display: block; font-size: 34px; line-height: 1.15; }
+.metric span { color: var(--muted); }
+.callout { padding: 18px 20px; border-left: 5px solid var(--blue); background: var(--soft-blue); border-radius: 8px; margin: 18px 0; }
+.callout.warn { border-color: var(--orange); background: #fff7ed; }
+.callout.success { border-color: var(--success); background: #ecfdf5; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.report-chart { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.figure { margin: 24px 0; }
+.figure figcaption { color: var(--muted); text-align: center; margin-top: 9px; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+th { text-align: left; background: #edf3fb; color: var(--ink); }
+th, td { border-bottom: 1px solid var(--line); padding: 11px 12px; vertical-align: top; }
+tr:hover td { background: #fafcff; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.status { display: inline-block; border-radius: 999px; padding: 3px 9px; font-weight: 800; font-size: 12px; }
+.status.pass { color: #065f46; background: #d1fae5; }
+pre { overflow-x: auto; background: #0f172a; color: #e2e8f0; padding: 20px; border-radius: 12px; line-height: 1.5; font-size: 13px; }
+code { font-family: Cascadia Code, Consolas, monospace; }
+td code { color: #1e3a8a; font-size: 12px; overflow-wrap: anywhere; word-break: break-word; }
+.hash { white-space: nowrap; }
+th, td { overflow-wrap: anywhere; word-break: break-word; }
+.file-tree { overflow-wrap: anywhere; }
+.flow { display: grid; grid-template-columns: repeat(7, minmax(115px,1fr)); align-items: center; gap: 10px; margin: 24px 0; }
+.flow-node { min-height: 92px; padding: 14px; border-radius: 13px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 800; background: #edf3fb; border: 1px solid #c9d7eb; }
+.flow-arrow { text-align: center; font-size: 26px; color: var(--blue); }
+.check-list { list-style: none; padding: 0; columns: 2; column-gap: 28px; }
+.check-list li { break-inside: avoid; margin: 0 0 9px; padding: 8px 10px; background: #f8fafc; border-radius: 8px; }
+.check { color: var(--success); font-weight: 900; margin-right: 8px; }
+.benefit { padding: 20px; border-radius: 14px; background: #f8fbff; border: 1px solid var(--line); }
+.benefit-icon { font-size: 26px; line-height: 1; margin-bottom: 8px; }
+.benefit h4 { margin: 4px 0 8px; font-size: 18px; color: var(--ink); }
+.benefit p { margin: 0; color: var(--muted); font-size: 14px; }
+details { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 14px 0; background: #fbfdff; }
+summary { cursor: pointer; font-weight: 800; color: var(--ink); }
+.file-tree { font-family: Cascadia Code, Consolas, monospace; background: #f8fafc; padding: 18px; border-radius: 12px; white-space: pre-wrap; }
+footer { background: var(--ink); color: #cbd5e1; padding: 28px; text-align: center; }
+.small { color: var(--muted); font-size: 13px; }
+@media (max-width: 950px) {
+  .metric-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .flow { grid-template-columns: 1fr; }
+  .flow-arrow { transform: rotate(90deg); }
+  .check-list { columns: 1; }
+  h1 { font-size: 42px; }
+}
+@media print {
+  nav { display: none; }
+  body { background: white; }
+  .hero { padding: 30px; }
+  main { padding: 12px; }
+  .card { break-inside: avoid; box-shadow: none; }
+  details { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<nav><div class="nav-inner">
+  <div class="nav-title">SPARK-61672</div>
+  <a href="#result">Result</a><a href="#benefits">Benefits</a><a href="#optimization">Optimization</a><a href="#threeway">3-Way</a><a href="#unified">4-Way 1M</a><a href="#architecture">Architecture</a>
+  <a href="#changes">Files</a><a href="#configuration">Configuration</a>
+  <a href="#runbook">Runbook</a><a href="#experiments">Experiments</a>
+  <a href="#evidence">Evidence</a><a href="#limits">Limits</a>
+</div></nav>
+<header class="hero"><div class="hero-inner">
+  <div class="eyebrow">Verified AWS experiment report</div>
+  <h1>Native asynchronous Spark SQL functions on real Amazon Bedrock</h1>
+  <p>A complete account of what was built, where configuration lives, how the validation ran, and what the measured evidence proves.</p>
+  <div class="hero-badges"><span class="badge">Result: PASS</span><span class="badge">1,000,000 Spark rows</span><span class="badge">6.59x measured speedup</span><span class="badge">40/40 correct and ordered</span><span class="badge">80 of 100 request budget</span></div>
+</div></header>
+<main>
+<section id="result" class="card">
+  <div class="eyebrow">Executive result</div><h2>All required validation stages passed</h2>
+  <p class="lead">The uploaded full Spark source built on a temporary non-production EC2 instance. All 25 focused async-engine tests passed, both provider modules built, native Spark SQL called Bedrock, and the one-million-row experiment returned every selected result correctly and in order.</p>
+  <div class="callout success"><strong>Provider result boundary:</strong> the AWS harness contains 67 executed validations, one intentional OpenAI-compatible live skip marker, and zero failures. The Bedrock path was exercised live.</div>
+  <div class="metric-grid">
+    <div class="metric"><strong>1,000,000</strong><span>Spark records processed</span></div>
+    <div class="metric"><strong>6.59x</strong><span>Async wall-time speedup</span></div>
+    <div class="metric"><strong>40/40</strong><span>Correct and ordered live rows</span></div>
+    <div class="metric"><strong>67 + 1</strong><span>Executed AWS provider validations plus one live-skip marker; zero failures</span></div>
+  </div>
+  <figure class="figure"><img class="report-chart" src="images/01-executive-dashboard.png" alt="AWS validation executive dashboard"><figcaption>Executive dashboard generated from raw evidence.</figcaption></figure>
+</section>
+
+<section id="benefits" class="card">
+  <div class="eyebrow">Why this matters</div><h2>Benefits and strengths</h2>
+  <p class="lead">The evidence supports these advantages of the SPARK-61672 approach.</p>
+  <div class="grid-3">
+    <div class="benefit"><div class="benefit-icon">&#9889;</div><h4>6.59x faster</h4><p>Overlapping in-flight calls cut the same Bedrock workload from 4,350 ms to 660 ms with identical model, prompts, and partitioning.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#9881;</div><h4>Native Spark operator</h4><p>AI calls run as <code>EvalAsyncFunctions</code> and <code>AsyncEval</code> inside the optimizer and planner, not as a bolt-on UDF.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#10003;</div><h4>Correct and ordered</h4><p>Every response was correct and in input order in both the serial and eight-in-flight runs, so speed did not cost accuracy.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128202;</div><h4>Scales with the query</h4><p>Spark processed 1,000,000 rows while filter and LIMIT shrank model-facing work to 40, so AI cost tracks the query, not raw data size.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128279;</div><h4>Provider-neutral</h4><p>One SPI powers both Amazon Bedrock and an OpenAI-compatible module. Switching providers is configuration, not a rewrite.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128274;</div><h4>Validated POC controls</h4><p>67 executed AWS provider validations plus one intentional live-skip marker covered allowlists, limits, retry, circuit breaking, cancellation, and sanitized provider-call errors.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128273;</div><h4>No secrets in code</h4><p>The Bedrock path used the EC2 instance role through the AWS SDK default chain. No key, secret, or token appears in source or configuration.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128181;</div><h4>Bounded original-run budget</h4><p>The first validation planned 80 logical Bedrock requests under an approved cap of 100. Later benchmark sections state their own evidence and boundaries.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128230;</div><h4>Measured and portable</h4><p>The original 8-vCPU validation peaked near 4.8 GiB. Later comparisons used additional temporary hosts. This report is self-contained for any browser.</p></div>
+  </div>
+</section>
+
+<section id="optimization" class="card">
+  <div class="eyebrow">Cost and performance</div><h2>In-task call deduplication</h2>
+  <p class="lead">Two engine changes strengthen the operator, validated at one-million-row scale against live Bedrock.</p>
+  <div class="grid-2">
+    <div class="callout"><strong>Event-driven slot signaling.</strong> A completion signals the task's slot-wait condition instead of requiring a fixed sleep before rechecking a provider slot. This removes fixed-sleep latency from those waits; it does not claim to eliminate all idle time.</div>
+    <div class="callout"><strong>Opt-in bounded task cache.</strong> With <code>spark.sql.asyncFunction.deduplicateCalls=true</code>, at most <code>deduplicateMaxEntries</code> argument keys per function/task are cached. Matches share the first future; keys first seen after saturation are not cached. Off by default because result sharing changes generative-call semantics.</div>
+  </div>
+  <table><thead><tr><th>Mode</th><th>Logical provider calls in timed query</th><th>Reused from cache</th><th>Wall time</th><th>Correct</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Deduplication OFF (default)</td><td>1,000</td><td>0</td><td>32,034 ms</td><td>1000/1000</td><td>Yes</td></tr>
+    <tr style="background:#ecfdf5;"><th>Deduplication ON (opt-in)</th><th>20</th><th>980</th><th>823 ms</th><th>1000/1000</th><th>Yes</th></tr>
+  </tbody></table>
+  <div class="figure"><img class="report-chart" src="images/11-dedup-cost-ab.png" alt="In-task deduplication cost A/B"><figcaption>1,000,000 generated rows, 1,000 timed output rows, 20 prompt values. The operator reported 98% fewer logical calls, with the same correct and ordered output.</figcaption></div>
+  <div class="callout success"><strong>98% fewer operator-reported logical calls</strong> in this duplicate-heavy timed query. This is not an AWS billing record: warm-ups and SDK retry attempts are outside the metric, and actual cost depends on pricing.</div>
+</section>
+
+<section id="threeway" class="card">
+  <div class="eyebrow">Head-to-head</div><h2>Four modes across three implementation families</h2>
+  <p class="lead">The JVM modes and corrected pandas rerun used the same EC2 instance, model, region, prompt definition, and single task. The first pandas orchestration failed before measurement; the corrected pandas-only rerun on that host produced the table. Every mode returned 120 of 120 correct answers in input order.</p>
+  <table><thead><tr><th>Approach</th><th>Concurrency</th><th>Wall time</th><th>Throughput</th><th>Speedup</th><th>Manual concurrency code</th><th>Order guaranteed</th></tr></thead><tbody>
+    <tr><td>Blocking scalar UDF (SPARK-61404 style)</td><td>1</td><td>28,560 ms</td><td>4.20 rows/s</td><td>1.00x</td><td>No</td><td>Serial only</td></tr>
+    <tr><td>Pandas UDF, sequential</td><td>1</td><td>29,360 ms</td><td>4.09 rows/s</td><td>0.97x</td><td>No</td><td>Yes</td></tr>
+    <tr><td>Pandas UDF, threaded pool of 8</td><td>8</td><td>4,416 ms</td><td>27.17 rows/s</td><td>6.47x</td><td>Yes, user-written</td><td>Yes</td></tr>
+    <tr style="background:#ecfdf5;"><th>AsyncScalarFunction (this SPIP)</th><th>8</th><th>3,963 ms</th><th>30.28 rows/s</th><th>7.21x</th><th>No</th><th>Yes, by the engine</th></tr>
+  </tbody></table>
+  <div class="figure"><img class="report-chart" src="images/09-three-way-comparison.png" alt="Three-way approach comparison"><figcaption>Same model, region, prompts, and single task. All returned 120/120 correct and ordered.</figcaption></div>
+  <div class="figure"><img class="report-chart" src="images/10-three-way-speedup.png" alt="Three-way speedup versus blocking UDF"><figcaption>In this 120-row measurement, native async was fastest. Later 1,000-row measurements put pandas ahead, so no general winner is claimed.</figcaption></div>
+  <div class="callout success"><strong>Measured conclusion:</strong> the native operator reached the hand-written concurrency throughput range in this workload with no user-written thread pool and with partition-local ordered row association.</div>
+</section>
+
+<section id="unified" class="card">
+  <div class="eyebrow">Shared data definition, four modes</div><h2>One-million-row benchmark on one host</h2>
+  <p class="lead">Two Spark applications regenerated the same deterministic 1,000,000-row definition and prompt mapping on one EC2 instance. JVM modes used the custom Spark 4.3.0 build; pandas used released PySpark 4.0.1. Each produced 1,000 timed output rows across 20 prompt values. They share the host, data definition, model, region, and checks, but not one materialized DataFrame or one Spark version.</p>
+  <table><thead><tr><th>Approach</th><th>In flight</th><th>Logical calls or timed rows</th><th>Rows reused</th><th>Wall time</th><th>Throughput</th><th>Correct</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Blocking scalar UDF (SPARK-61404 style)</td><td>1</td><td>1,000</td><td>0</td><td>227,049 ms</td><td>4.40 rows/s</td><td>1000/1000</td><td>Yes</td></tr>
+    <tr><td>Pandas UDF, threaded pool of 8</td><td>8</td><td>1,000</td><td>0</td><td>26,714 ms</td><td>37.43 rows/s</td><td>1000/1000</td><td>Yes</td></tr>
+    <tr><td>AsyncScalarFunction, dedup off</td><td>8</td><td>1,000</td><td>0</td><td>30,755 ms</td><td>32.52 rows/s</td><td>1000/1000</td><td>Yes</td></tr>
+    <tr style="background:#ecfdf5;"><th>AsyncScalarFunction, dedup on</th><th>8</th><th>20</th><th>980</th><th>693 ms</th><th>1443.00 rows/s</th><th>1000/1000</th><th>Yes</th></tr>
+  </tbody></table>
+  <div class="figure"><img class="report-chart" src="images/12-unified-four-way-1m.png" alt="Unified four-way benchmark on one million rows"><figcaption>Same deterministic data definition and prompt mapping on one host, regenerated by custom Spark 4.3.0 JVM modes and a released PySpark 4.0.1 pandas mode.</figcaption></div>
+  <div class="grid-2">
+    <div class="callout warn"><strong>Observed throughput:</strong> threaded pandas reached 37.43 rows/s and async without reuse reached 32.52. One observation per mode does not support a statistical or universal ranking.</div>
+    <div class="callout success"><strong>Repeatable logical-call reduction:</strong> the native operator reported 1,000 calls without reuse and 20 with reuse, a 98% reduction repeated on the second host. This is not an AWS billing audit; retries and pricing determine billed cost.</div>
+  </div>
+  <p>The operator needs no user-written concurrency loop, preserves partition-local child-row order, runs in the JVM, and enforces a static per-operator, per-task-partition active-call ceiling that a session cannot change.</p>
+  <h3>Reproducibility: two independent runs</h3>
+  <p>The unified benchmark was run twice, on two separate EC2 instances, each with a clean build from the same SHA-256-verified source archive against live Amazon Bedrock. The second run is independent evidence, not a re-report of the first.</p>
+  <table><thead><tr><th>Approach</th><th>Run 1 wall</th><th>Run 2 wall</th><th>Run 1 throughput</th><th>Run 2 throughput</th><th>Logical calls or timed rows</th><th>Correct and ordered</th></tr></thead><tbody>
+    <tr><td>Blocking scalar UDF</td><td>227,049 ms</td><td>228,413 ms</td><td>4.40 rows/s</td><td>4.38 rows/s</td><td>1,000</td><td>1000/1000 both</td></tr>
+    <tr><td>Pandas UDF, threaded pool of 8</td><td>26,714 ms</td><td>25,742 ms</td><td>37.43 rows/s</td><td>38.85 rows/s</td><td>1,000</td><td>1000/1000 both</td></tr>
+    <tr><td>AsyncScalarFunction, dedup off</td><td>30,755 ms</td><td>29,878 ms</td><td>32.52 rows/s</td><td>33.47 rows/s</td><td>1,000</td><td>1000/1000 both</td></tr>
+    <tr style="background:#ecfdf5;"><th>AsyncScalarFunction, dedup on</th><th>693 ms</th><th>863 ms</th><th>1443.00 rows/s</th><th>1158.75 rows/s</th><th>20</th><th>1000/1000 both</th></tr>
+  </tbody></table>
+  <div class="figure"><img class="report-chart" src="images/13-two-run-reproducibility.png" alt="Two independent AWS runs of the unified benchmark"><figcaption>Two separate EC2 runs from the same verified source. Correctness and native logical-call metrics repeated; timing varied with service and host conditions.</figcaption></div>
+  <div class="grid-2">
+    <div class="callout success"><strong>Repeated measured outcome:</strong> 1000/1000 correct and ordered output in every mode, plus 20 native logical calls and 980 reused rows in both dedup runs.</div>
+    <div class="callout warn"><strong>Run-dependent timing:</strong> the dedup ratio was 328x versus blocking in run 1 and 265x in run 2. The stable result is the 98% operator-reported logical-call reduction, not a billing guarantee.</div>
+  </div>
+  <h3>mapInArrow plus asyncio: direct Python comparison</h3>
+  <p>Benchmark 6 directly compared a representative <code>mapInArrow</code> plus asyncio implementation with a threaded pandas UDF on one EC2 host under released PySpark 4.0.1. Both regenerated the same deterministic definition, used eight concurrent calls, and returned 1000/1000 correct rows in <code>ORDER BY id</code> output.</p>
+  <table><thead><tr><th>Direct same-host mode</th><th>Concurrency</th><th>Timed wall time</th><th>Observed throughput</th><th>Correct and ordered</th></tr></thead><tbody>
+    <tr><td>mapInArrow + asyncio</td><td>8</td><td>24,799 ms</td><td>40.32 rows/s</td><td>1000/1000</td></tr>
+    <tr><td>Pandas UDF, threaded pool of 8</td><td>8</td><td>26,835 ms</td><td>37.26 rows/s</td><td>1000/1000</td></tr>
+  </tbody></table>
+  <div class="figure"><img class="report-chart" src="images/14-mapinarrow-concurrency.png" alt="mapInArrow plus asyncio versus the async operator"><figcaption>Only the two same-host PySpark 4.0.1 modes are ranked. Native async ran on another host and custom Spark build, so its result is contextual.</figcaption></div>
+  <div class="callout warn"><strong>Method boundary:</strong> the mapInArrow warm-up may have processed the full Arrow batch before the timed action. Its <code>calls=1000</code> field is inferred from timed input rows, not a server-side request counter. A different host measured native async without reuse at 30,755 ms (32.52 rows/s); that cross-run value is context, not a controlled ranking.</div>
+  <p>The supported conclusion is that both user-written Python implementations overlap remote latency successfully. Native async measurements are in the same broad range and add a SQL/JVM path, partition-local ordered row association, and a static per-operator, per-task-partition ceiling. A controlled ranking requires every mode on the same host, Spark build, and protocol, with repeated trials.</p>
+</section>
+
+<section id="architecture" class="card">
+  <div class="eyebrow">Execution path</div><h2>Architecture validated end to end</h2>
+  <div class="flow">
+    <div class="flow-node">Spark SQL query</div><div class="flow-arrow">→</div>
+    <div class="flow-node">V2 function catalog</div><div class="flow-arrow">→</div>
+    <div class="flow-node">EvalAsyncFunctions</div><div class="flow-arrow">→</div>
+    <div class="flow-node">AsyncEvalExec</div>
+  </div>
+  <div class="flow">
+    <div class="flow-node">Bounded futures</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Bedrock provider</div><div class="flow-arrow">→</div>
+    <div class="flow-node">AWS SDK async client</div><div class="flow-arrow">→</div>
+    <div class="flow-node">Amazon Nova Micro</div>
+  </div>
+  <p>The analyzer resolved the public provider-neutral SPI. The optimizer extracted remote calls and placed ordinary relational work below the async node. The planner emitted the new physical operator, which bounded in-flight work and restored input order.</p>
+  <pre><code>Optimized plan
+Sort [ordinal ASC NULLS FIRST], true
++- Project [ordinal, asyncFunc AS answer]
+   +- EvalAsyncFunctions [generate(prompt)], [asyncFunc]
+      +- LocalRelation [ordinal, prompt]
+
+Physical plan
++- AsyncEval [generate(prompt)], [asyncFunc]
+   +- LocalTableScan [ordinal, prompt]</code></pre>
+</section>
+
+<section id="changes" class="card">
+  <div class="eyebrow">Implementation map</div><h2>What was added and where</h2>
+  <div class="grid-2">
+    <div><h3>Eight modified Spark files</h3><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>hadoop-cloud/pom.xml</code></td><td>Test-only Catalyst test-JAR dependency</td></tr><tr><td><code>sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/analysis/FunctionResolution.scala</code></td><td>Resolve V2 AsyncScalarFunction</td></tr><tr><td><code>sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/optimizer/Optimizer.scala</code></td><td>Safe filter and LIMIT placement</td></tr><tr><td><code>sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/trees/TreePatterns.scala</code></td><td>Async tree patterns</td></tr><tr><td><code>sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala</code></td><td>Concurrency and reorder controls</td></tr><tr><td><code>sql/core/src/main/scala/org/apache/spark/sql/execution/SparkOptimizer.scala</code></td><td>Register extraction rules</td></tr><tr><td><code>sql/core/src/main/scala/org/apache/spark/sql/execution/SparkPlanner.scala</code></td><td>Register async planning strategy</td></tr><tr><td><code>sql/core/src/main/scala/org/apache/spark/sql/execution/SparkStrategies.scala</code></td><td>Plan AsyncEvalExec</td></tr></tbody></table></div>
+    <div><h3>Nine new engine and test files</h3><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>sql/catalyst/src/main/java/org/apache/spark/sql/connector/catalog/functions/AsyncScalarFunction.java</code></td><td>Public provider-neutral future-returning SPI</td></tr><tr><td><code>sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/expressions/ApplyAsyncFunctionExpression.scala</code></td><td>Unevaluable async expression and identity</td></tr><tr><td><code>sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/plans/logical/asyncFunctionLogicalOperators.scala</code></td><td>EvalAsyncFunctions logical node</td></tr><tr><td><code>sql/core/src/main/scala/org/apache/spark/sql/execution/async/AsyncEvalExec.scala</code></td><td>Bounded, ordered, spillable, cancellable operator</td></tr><tr><td><code>sql/core/src/main/scala/org/apache/spark/sql/execution/async/ExtractAsyncFunctions.scala</code></td><td>Innermost-first and aggregate-aware extraction</td></tr><tr><td><code>sql/core/src/test/scala/org/apache/spark/sql/execution/async/AsyncFunctionEndToEndSuite.scala</code></td><td>Six end-to-end cases</td></tr><tr><td><code>sql/core/src/test/scala/org/apache/spark/sql/execution/async/AiQueryParitySuite.scala</code></td><td>Seven provider-envelope and error-policy cases</td></tr><tr><td><code>sql/core/src/test/scala/org/apache/spark/sql/execution/async/AsyncFunctionSafetySuite.scala</code></td><td>Twelve safety and optimizer cases</td></tr><tr><td><code>hadoop-cloud/src/test/scala/org/apache/spark/sql/execution/async/BedrockLiveAsyncFunctionSuite.scala</code></td><td>Live Bedrock SQL test path</td></tr></tbody></table></div>
+  </div>
+  <h3>Validation package</h3>
+  <div class="file-tree">&lt;workspace&gt;/aws-validation/
+├── AwsLargeDatasetValidation.scala
+├── validation-pom.xml
+├── run-validation.sh
+├── run-conformance.sh
+├── ec2-runtime-policy.json
+├── ec2-trust-policy.json
+├── ssm-*-command.json
+├── evidence/
+└── report/</div>
+  <p>The authoritative Spark and POC inventory remains <code>spark-4.3.0/SPARK-61672/ALL-CHANGED-FILES.md</code>. Deployment artifacts remain outside the Apache Spark repository.</p>
+</section>
+
+<section id="configuration" class="card">
+  <div class="eyebrow">Runtime settings</div><h2>Configuration and credential ownership</h2>
+  <div class="grid-3">
+    <div class="callout"><strong>Session request</strong><br><code>spark.sql.catalog.bedrock.*</code><br>Catalog, model, region, and lower per-session limits.</div>
+    <div class="callout"><strong>Cluster guardrails</strong><br><code>spark.ai.bedrock.*</code><br>Allowlists and ceilings a session cannot widen.</div>
+    <div class="callout"><strong>Engine settings</strong><br><code>spark.sql.asyncFunction.*</code><br>Only <code>maxInFlightCeiling</code> is static. Reorder, polling, and bounded task-cache settings are session configurations within validated ranges.</div>
+  </div>
+  <h3>Exact Bedrock configuration used</h3><pre><code>SparkSession.builder()
+  .master(&quot;local[8]&quot;)
+  .config(&quot;spark.sql.catalog.bedrock&quot;,
+    &quot;org.apache.spark.sql.ai.bedrock.BedrockFunctionCatalog&quot;)
+  .config(&quot;spark.sql.catalog.bedrock.region&quot;, &quot;us-east-1&quot;)
+  .config(&quot;spark.sql.catalog.bedrock.modelId&quot;, &quot;amazon.nova-micro-v1:0&quot;)
+  .config(&quot;spark.sql.catalog.bedrock.maxTokens&quot;, &quot;16&quot;)
+  .config(&quot;spark.sql.catalog.bedrock.maxInFlight&quot;, &quot;8&quot;)
+  .config(&quot;spark.ai.bedrock.allowedModels&quot;, &quot;amazon.nova-micro-v1:0&quot;)
+  .config(&quot;spark.ai.bedrock.allowedRegions&quot;, &quot;us-east-1&quot;)
+  .config(&quot;spark.ai.bedrock.maxTokens&quot;, &quot;32&quot;)
+  .config(&quot;spark.sql.asyncFunction.maxInFlightCeiling&quot;, &quot;8&quot;)
+  .config(&quot;spark.sql.asyncFunction.reorderWindow&quot;, &quot;32&quot;)
+  .config(&quot;spark.speculation&quot;, &quot;false&quot;)
+  .config(&quot;spark.task.maxFailures&quot;, &quot;1&quot;)
+  .config(&quot;spark.sql.shuffle.partitions&quot;, &quot;32&quot;)</code></pre>
+  <h3>Credentials</h3>
+  <p>The provider calls <code>DefaultCredentialsProvider.builder().build()</code>. On EC2, the AWS SDK obtained temporary credentials from the instance role through IMDSv2. Sessions cannot supply credentials through catalog options. No access key, secret key, profile name, or bearer token was embedded in source or Spark configuration.</p>
+  <div class="callout warn"><strong>Optional OpenAI-compatible path:</strong> the cluster administrator names an executor environment variable through <code>spark.ai.openai.credentialEnv</code>. A short-lived bearer token belongs only in that environment variable. The external OpenAI-compatible live test was skipped because no approved token was available.</div>
+  <h3>Temporary AWS controls</h3>
+  <table><tbody>
+    <tr><th>Compute</th><td>Amazon Linux 2023, m7i.2xlarge, 8 vCPU, 30 GiB visible RAM</td></tr>
+    <tr><th>Storage</th><td>150 GiB encrypted gp3, delete on termination</td></tr>
+    <tr><th>Network</th><td>No inbound security-group rules; Systems Manager only</td></tr>
+    <tr><th>Identity</th><td>Dedicated temporary EC2 role, no static instance key</td></tr>
+    <tr><th>Bedrock</th><td>InvokeModel limited to amazon.nova-micro-v1:0 in us-east-1</td></tr>
+    <tr><th>Java</th><td>Amazon Corretto 17.0.21</td></tr>
+    <tr><th>AWS CLI</th><td>2.38.0 on the EC2 host</td></tr>
+    <tr><th>S3</th><td>Exact source-object read and validation-prefix read/write</td></tr>
+  </tbody></table>
+</section>
+
+<section id="runbook" class="card">
+  <div class="eyebrow">Reproduction</div><h2>How to run</h2>
+  <h3>A. Local build and 25 engine tests, no AWS</h3><pre><code>$env:SPARK_61672_JAVA_HOME = &#x27;C:\path\to\jdk-17&#x27;
+$env:SPARK_61672_MAVEN = &#x27;C:\path\to\mvn.cmd&#x27;
+$env:SPARK_61672_HADOOP_HOME = &#x27;C:\path\to\hadoop&#x27;
+
+powershell -ExecutionPolicy Bypass -File SPARK-61672\preflight.ps1
+powershell -ExecutionPolicy Bypass -File SPARK-61672\run-poc.ps1</code></pre>
+  <h3>B. Local live Bedrock proof</h3><pre><code>$env:AWS_PROFILE = &#x27;&lt;approved-temporary-profile&gt;&#x27;
+$env:SPARK_TEST_BEDROCK_REGION = &#x27;us-east-1&#x27;
+$env:SPARK_TEST_BEDROCK_MODEL_ID = &#x27;amazon.nova-micro-v1:0&#x27;
+
+powershell -ExecutionPolicy Bypass -File SPARK-61672\preflight.ps1 -CheckAws
+powershell -ExecutionPolicy Bypass -File SPARK-61672\run-poc.ps1 `
+  -SkipSparkBuild -SkipEngineTests -Live</code></pre>
+  <h3>C. AWS EC2 validation</h3>
+  <ol>
+    <li>Place the full-source ZIP in private, encrypted S3 storage.</li>
+    <li>Create an EC2 role from the included trust and runtime policy templates. Restrict the source key, result prefix, region, and model.</li>
+    <li>Launch Amazon Linux 2023 with encrypted delete-on-termination storage, IMDSv2, no inbound rules, and Systems Manager.</li>
+    <li>Set a unique result prefix and update the instance IDs in the SSM command documents.</li>
+    <li>Upload the runners, validation POM, and Scala harness to the private input prefix.</li>
+    <li>Run <code>ssm-run-command.json</code>, then <code>ssm-conformance-command.json</code>.</li>
+    <li>Download and verify evidence before deleting temporary resources.</li>
+  </ol>
+  <h3>Build commands executed on EC2</h3><pre><code>./build/mvn -f pom.xml \
+  -pl sql/catalyst,sql/core -am install -DskipTests \
+  -Dmaven.scaladoc.skip=true -Dmaven.javadoc.skip=true
+
+./build/mvn -f pom.xml \
+  -pl sql/core -am test \
+  -DwildcardSuites=org.apache.spark.sql.execution.async -Dtest=none
+
+./build/mvn -f SPARK-61672/spark-implementation/connector/ai-bedrock/pom.xml \
+  install -DskipTests
+
+./build/mvn -f SPARK-61672/spark-implementation/connector/ai-openai/pom.xml \
+  install -DskipTests</code></pre>
+  <details><summary>Operational portability fixes used by the successful runner</summary>
+    <ul><li>Normalize CRLF in <code>build/mvn</code>, shell helpers, and <code>build/spark-build-info</code>.</li><li>Run Maven from the extracted Spark root so checkstyle resolves relative configuration.</li><li>Skip generated Scala and Java documentation during validation builds.</li><li>Use Java 17 module-open options for standalone validation entry points.</li></ul>
+  </details>
+</section>
+
+<section id="experiments" class="card">
+  <div class="eyebrow">Measured evidence</div><h2>Experiments and benchmark results</h2>
+  <h3>End-to-end stage ledger</h3>
+  <table><thead><tr><th>Stage</th><th class="num">Duration</th><th>Result</th><th>Finished UTC</th></tr></thead><tbody><tr><td>System Packages</td><td class='num'>1 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:29:57Z</code></td></tr><tr><td>Source Download</td><td class='num'>1 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:29:58Z</code></td></tr><tr><td>Source Extract</td><td class='num'>0 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:29:58Z</code></td></tr><tr><td>Spark Engine Install</td><td class='num'>598 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:39:56Z</code></td></tr><tr><td>Spark Engine Tests</td><td class='num'>542 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:48:58Z</code></td></tr><tr><td>Bedrock Provider Install</td><td class='num'>13 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:49:11Z</code></td></tr><tr><td>Openai Provider Install</td><td class='num'>7 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:49:18Z</code></td></tr><tr><td>Validation Harness Build</td><td class='num'>9 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:49:28Z</code></td></tr><tr><td>Live Spark Sql Proof</td><td class='num'>8 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:49:36Z</code></td></tr><tr><td>Live Throughput Benchmark</td><td class='num'>11 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:49:47Z</code></td></tr><tr><td>Large Dataset Validation</td><td class='num'>10 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T00:49:57Z</code></td></tr><tr><td>Provider Conformance</td><td class='num'>37 s</td><td><span class='status pass'>PASS</span></td><td><code>2026-11-17T01:04:30Z</code></td></tr></tbody></table>
+  <figure class="figure"><img class="report-chart" src="images/04-stage-durations.png" alt="End-to-end validation stage durations"><figcaption>Build and test compilation dominated the end-to-end runtime.</figcaption></figure>
+
+  <h3>Real Bedrock concurrency benchmark</h3>
+  <table><thead><tr><th>Mode</th><th>In flight</th><th>Wall time</th><th>Throughput</th><th>Correct</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Serial control</td><td>1</td><td>4,350 ms</td><td>3.68 rows/s</td><td>16/16</td><td>Yes</td></tr>
+    <tr><td>Async engine</td><td>8</td><td>660 ms</td><td>24.24 rows/s</td><td>16/16</td><td>Yes</td></tr>
+    <tr><th>Measured change</th><th></th><th>6.59x faster</th><th>6.59x</th><th>All</th><th>Yes</th></tr>
+  </tbody></table>
+  <figure class="figure"><img class="report-chart" src="images/02-throughput-comparison.png" alt="Real Bedrock throughput comparison"><figcaption>Same model, prompts, JVM shape, and partition count. Only the in-flight limit changed.</figcaption></figure>
+
+  <h3>One-million-row data design</h3>
+  <p>IDs 0 through 999,999 were generated over 32 partitions. Five star groups contained 200,000 rows each. Every ID divisible by 97 produced a NULL review. The ID checksum had to equal 499,999,500,000.</p>
+  <div class="grid-2">
+    <figure class="figure"><img class="report-chart" src="images/03-million-row-funnel.png" alt="One-million-row processing funnel"><figcaption>Predicate and LIMIT bounded model-facing work.</figcaption></figure>
+    <figure class="figure"><img class="report-chart" src="images/06-processing-performance.png" alt="One-million-row validation timing"><figcaption>Processing and live-call timing.</figcaption></figure>
+  </div>
+  <h4>Machine-readable metrics</h4>
+  <table><thead><tr><th>Metric</th><th class="num">Value</th><th>Unit</th><th>Status</th></tr></thead><tbody><tr><td>Dataset Rows</td><td class='num'>1,000,000</td><td>rows</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Dataset Partitions</td><td class='num'>32</td><td>partitions</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Materialize Elapsed Ms</td><td class='num'>3,867</td><td>ms</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Aggregate Elapsed Ms</td><td class='num'>415</td><td>ms</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Id Checksum</td><td class='num'>499,999,500,000</td><td>sum</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Null Review Rows</td><td class='num'>10,310</td><td>rows</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Balanced Star Groups</td><td class='num'>5</td><td>groups</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Candidate Rows Before Limit</td><td class='num'>100</td><td>rows</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Optimized Has Async Node</td><td class='num'>True</td><td>boolean</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Executed Has Async Node</td><td class='num'>True</td><td>boolean</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Plan Has Limit</td><td class='num'>True</td><td>boolean</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Plan Has Filter</td><td class='num'>True</td><td>boolean</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Live Logical Requests</td><td class='num'>40</td><td>requests</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Live Elapsed Ms</td><td class='num'>2,482</td><td>ms</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Live Rows Per Second</td><td class='num'>16.1160</td><td>rows per second</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Live Correct Rows</td><td class='num'>40</td><td>rows</td><td><span class='status pass'>PASS</span></td></tr><tr><td>Live Ordered Rows</td><td class='num'>True</td><td>boolean</td><td><span class='status pass'>PASS</span></td></tr></tbody></table>
+  <h4>Live result sample</h4>
+  <table><thead><tr><th>ID</th><th>Model answer</th><th>Status</th></tr></thead><tbody><tr><td>4</td><td>ID-4</td><td>PASS</td></tr><tr><td>10004</td><td>ID-10004</td><td>PASS</td></tr><tr><td>20004</td><td>ID-20004</td><td>PASS</td></tr><tr><td>30004</td><td>ID-30004</td><td>PASS</td></tr><tr><td>40004</td><td>ID-40004</td><td>PASS</td></tr><tr><td>50004</td><td>ID-50004</td><td>PASS</td></tr><tr><td>60004</td><td>ID-60004</td><td>PASS</td></tr><tr><td>70004</td><td>ID-70004</td><td>PASS</td></tr><tr><td>80004</td><td>ID-80004</td><td>PASS</td></tr><tr><td>90004</td><td>ID-90004</td><td>PASS</td></tr></tbody></table>
+
+  <h3>Logical request budget</h3>
+  <figure class="figure"><img class="report-chart" src="images/07-bedrock-request-budget.png" alt="Bedrock logical request budget"><figcaption>80 planned logical requests left a 20-request reserve.</figcaption></figure>
+  <div class="callout warn">The cap covers logical application requests. AWS SDK retries can add attempts only after transient failures.</div>
+
+  <h3>Resource footprint</h3>
+  <figure class="figure"><img class="report-chart" src="images/08-resource-footprint.png" alt="Measured EC2 process resource footprint"><figcaption>Measured peak RSS and average process-tree CPU.</figcaption></figure>
+  <h3>Scorecard</h3>
+  <figure class="figure"><img class="report-chart" src="images/05-validation-scorecard.png" alt="Validation scorecard"><figcaption>Every required result marker passed.</figcaption></figure>
+</section>
+
+<section id="conformance" class="card">
+  <div class="eyebrow">Provider quality</div><h2>Conformance details</h2>
+  <p>The harness reported <strong>68 passing entries and zero failures</strong>. One entry is the explicit successful skip marker for the OpenAI-compatible external live path. The remaining 67 entries exercised behavior or safety checks, including live Bedrock.</p>
+  <details><summary>Show all 68 harness entries</summary><ul class="check-list"><li><span class='check'>✓</span>credentialEnv cannot be set from a catalog option (cluster-only)</li><li><span class='check'>✓</span>session can lower but not raise maxResponseBytes above the cluster ceiling</li><li><span class='check'>✓</span>session cannot disable a cluster rate ceiling or raise it</li><li><span class='check'>✓</span>breaker policy options from a session are ignored (cluster-only)</li><li><span class='check'>✓</span>garbage numeric option fails without echoing the value</li><li><span class='check'>✓</span>loopback exemption is host-exact, not prefix-matched</li><li><span class='check'>✓</span>baseUrl with user info is rejected</li><li><span class='check'>✓</span>DESCRIBE text does not expose the endpoint URL</li><li><span class='check'>✓</span>allowlist rejects an unapproved base URL</li><li><span class='check'>✓</span>allowlist rejects an unapproved model</li><li><span class='check'>✓</span>plain http is rejected off loopback</li><li><span class='check'>✓</span>empty allowlist blocks the catalog entirely</li><li><span class='check'>✓</span>requested concurrency is clamped to the static ceiling</li><li><span class='check'>✓</span>bound function is nondeterministic and has a stable canonical name</li><li><span class='check'>✓</span>catalog lists exactly the three forms</li><li><span class='check'>✓</span>bind rejects a non-string argument</li><li><span class='check'>✓</span>success parses choices[0].message.content</li><li><span class='check'>✓</span>prompt with quotes, backslashes and newlines round-trips through Jackson</li><li><span class='check'>✓</span>NULL input returns NULL without a call (verified by the server request counter)</li><li><span class='check'>✓</span>gzip response is decoded</li><li><span class='check'>✓</span>decoded size cap rejects an oversized plain response</li><li><span class='check'>✓</span>decoded size cap rejects an oversized gzip response (decoded, not compressed, size)</li><li><span class='check'>✓</span>a response under the cap still succeeds</li><li><span class='check'>✓</span>chunked response with no Content-Length is aborted at the cap while streaming</li><li><span class='check'>✓</span>chunked response under the cap succeeds</li><li><span class='check'>✓</span>429 with Retry-After seconds is retried and then succeeds</li><li><span class='check'>✓</span>Retry-After parser handles delay-seconds, HTTP-date, and garbage</li><li><span class='check'>✓</span>429 with Retry-After HTTP-date is retried and then succeeds</li><li><span class='check'>✓</span>retries stop at maxAttempts</li><li><span class='check'>✓</span>absolute deadline stops retries before maxAttempts</li><li><span class='check'>✓</span>request timeout surfaces TIMEOUT and does not hang</li><li><span class='check'>✓</span>400 is terminal BAD_REQUEST and is not retried</li><li><span class='check'>✓</span>404 is terminal BAD_REQUEST</li><li><span class='check'>✓</span>403 is terminal AUTH</li><li><span class='check'>✓</span>malformed envelope is SCHEMA</li><li><span class='check'>✓</span>non-JSON body is SCHEMA</li><li><span class='check'>✓</span>no error path in any form leaks the prompt, token, URL, or provider body</li><li><span class='check'>✓</span>generate_status throws (does not return a struct) on a fatal AUTH error</li><li><span class='check'>✓</span>try_generate turns a row-level error into NULL</li><li><span class='check'>✓</span>try_generate still fails fatally on AUTH</li><li><span class='check'>✓</span>generate_status returns a populated SUCCESS struct</li><li><span class='check'>✓</span>generate_status returns an ERROR struct with code, safe message, attempts and request id</li><li><span class='check'>✓</span>generate_status reports attempts after a retry</li><li><span class='check'>✓</span>generate_status NULL input is SKIPPED_NULL_INPUT with zero attempts</li><li><span class='check'>✓</span>cancelling the result aborts the in-flight HTTP exchange (server sees the write fail)</li><li><span class='check'>✓</span>cancelling during retry backoff sends no further request (deterministic Retry-After)</li><li><span class='check'>✓</span>each attempt is bounded end to end: a trickled body cannot exceed the attempt budget</li><li><span class='check'>✓</span>a trickled BODY is cut off at the attempt budget and the exchange is aborted</li><li><span class='check'>✓</span>rejected pacer callers do not burn slots or trip the breaker</li><li><span class='check'>✓</span>circuit breaker opens after consecutive endpoint failures and reports CIRCUIT_OPEN</li><li><span class='check'>✓</span>a second catalog with different tuning shares the same open breaker</li><li><span class='check'>✓</span>CIRCUIT_OPEN is reported, not fatal, in the tolerant forms</li><li><span class='check'>✓</span>after the reset window exactly one probe is admitted, and its failure re-opens</li><li><span class='check'>✓</span>a late outcome from a call admitted before the trip cannot close the breaker</li><li><span class='check'>✓</span>breaker ignores cancellation and client-side 400s (does not open)</li><li><span class='check'>✓</span>over-cap 5xx body is classified by status (retryable), not as RESPONSE_TOO_LARGE</li><li><span class='check'>✓</span>pacer spaces requests at the configured rate (sequential)</li><li><span class='check'>✓</span>a session rate limit does not slow a different catalog on the same endpoint</li><li><span class='check'>✓</span>a cluster rate ceiling applies to every catalog and a session cannot lift it</li><li><span class='check'>✓</span>varying per-call tuning does not create new clients or threads</li><li><span class='check'>✓</span>pacer and breaker are safe under 32 concurrent callers</li><li><span class='check'>✓</span>bedrock allowlist rejects an unapproved model and region</li><li><span class='check'>✓</span>bedrock concurrency is clamped to the static ceiling</li><li><span class='check'>✓</span>bedrock SDK exceptions map to stable codes with row-level vs fatal split</li><li><span class='check'>✓</span>LIVE openai-compatible cases (set SPARK_TEST_LIVE_OPENAI_BASE_URL and AI_PROVIDER_TOKEN)  [skipped]</li><li><span class='check'>✓</span>LIVE bedrock: generate through BedrockFunctionCatalog returns the model text</li><li><span class='check'>✓</span>LIVE bedrock: generate_status populates request_id</li><li><span class='check'>✓</span>LIVE bedrock: NULL input makes no call</li></ul></details>
+</section>
+
+<section id="evidence" class="card">
+  <div class="eyebrow">Traceability</div><h2>Evidence catalog</h2>
+  <p>The original evidence catalog below covers the first validation run. Later benchmark evidence is retained separately under <code>benchmark3/evidence</code> through <code>benchmark6/evidence</code>. This HTML embeds all 14 charts as base64 data and has no network dependency.</p>
+  <details open><summary>Show evidence files, sizes, and SHA-256 prefixes</summary>
+    <table><thead><tr><th>File</th><th>Purpose</th><th class="num">Size</th><th>SHA-256 prefix</th></tr></thead><tbody><tr><td><code>bedrock-provider-install-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>918 B</td><td><code class='hash'>74d248f83640056d...</code></td></tr><tr><td><code>bedrock-provider-install.log</code></td><td>Bedrock provider build</td><td class='num'>314.3 KiB</td><td><code class='hash'>28f094677940b88a...</code></td></tr><tr><td><code>environment.txt</code></td><td>Operating system, CPU, memory, disk, Java, AWS CLI, and instance evidence</td><td class='num'>4.5 KiB</td><td><code class='hash'>e87d8054ca9770cf...</code></td></tr><tr><td><code>final-cleanup-verification.txt</code></td><td>Read-only verification that temporary instances, security groups, IAM role, and profile are absent</td><td class='num'>447 B</td><td><code class='hash'>39df67729712fb64...</code></td></tr><tr><td><code>final-summary.txt</code></td><td>Machine-readable final outcome and request budget</td><td class='num'>296 B</td><td><code class='hash'>61171805a6192ba2...</code></td></tr><tr><td><code>large-dataset-metrics.csv</code></td><td>Machine-readable one-million-row metrics</td><td class='num'>644 B</td><td><code class='hash'>0caa4abeb117a35e...</code></td></tr><tr><td><code>large-dataset-validation-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>20.3 KiB</td><td><code class='hash'>278a90a143bd39f3...</code></td></tr><tr><td><code>large-dataset-validation.log</code></td><td>Large-data plan, metrics, samples, and outcome</td><td class='num'>7.4 KiB</td><td><code class='hash'>4cec3592755f7063...</code></td></tr><tr><td><code>live-spark-sql-proof-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>20.3 KiB</td><td><code class='hash'>01053f6192d5ddd6...</code></td></tr><tr><td><code>live-spark-sql-proof.log</code></td><td>Native plans, model results, NULL handling, pushdown, and request ID</td><td class='num'>6.0 KiB</td><td><code class='hash'>4b4efa427cf5a825...</code></td></tr><tr><td><code>live-throughput-benchmark-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>20.3 KiB</td><td><code class='hash'>0e07fda0fa011441...</code></td></tr><tr><td><code>live-throughput-benchmark.log</code></td><td>Serial versus async benchmark</td><td class='num'>4.9 KiB</td><td><code class='hash'>2a56a2b9b7e461c0...</code></td></tr><tr><td><code>openai-provider-install-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>915 B</td><td><code class='hash'>9df8386b6285c384...</code></td></tr><tr><td><code>openai-provider-install.log</code></td><td>OpenAI-compatible provider build</td><td class='num'>3.0 KiB</td><td><code class='hash'>c2ae1f553c0ebc28...</code></td></tr><tr><td><code>orchestration.log</code></td><td>Main stage progression</td><td class='num'>1.2 KiB</td><td><code class='hash'>8bc2e0e7df289c11...</code></td></tr><tr><td><code>overall-status.txt</code></td><td>Main orchestration exit status</td><td class='num'>46 B</td><td><code class='hash'>46d04d3a080b9e30...</code></td></tr><tr><td><code>provider-conformance-build.log</code></td><td>Supporting validation evidence</td><td class='num'>2.2 KiB</td><td><code class='hash'>ffd993736cfb4a7e...</code></td></tr><tr><td><code>provider-conformance-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>20.3 KiB</td><td><code class='hash'>793fe39973bf08e1...</code></td></tr><tr><td><code>provider-conformance.log</code></td><td>Provider safety and behavior results</td><td class='num'>4.5 KiB</td><td><code class='hash'>e2140afc6cd3b7c5...</code></td></tr><tr><td><code>source-checksum.txt</code></td><td>Full-source ZIP SHA-256 verification</td><td class='num'>54 B</td><td><code class='hash'>de1d51c91207fd1b...</code></td></tr><tr><td><code>source-download-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>924 B</td><td><code class='hash'>89c96018a7df5aa6...</code></td></tr><tr><td><code>source-download.log</code></td><td>Supporting validation evidence</td><td class='num'>0 B</td><td><code class='hash'>e3b0c44298fc1c14...</code></td></tr><tr><td><code>source-extract-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>936 B</td><td><code class='hash'>045a092bccf3968e...</code></td></tr><tr><td><code>source-extract.log</code></td><td>Supporting validation evidence</td><td class='num'>41 B</td><td><code class='hash'>9f08536683a1099b...</code></td></tr><tr><td><code>spark-engine-install-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>959 B</td><td><code class='hash'>b97d151fc1e6a44f...</code></td></tr><tr><td><code>spark-engine-install.log</code></td><td>Custom Spark build output</td><td class='num'>751.4 KiB</td><td><code class='hash'>b2e2627a40c6d150...</code></td></tr><tr><td><code>spark-engine-tests-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>944 B</td><td><code class='hash'>cd00bd3601bcb05c...</code></td></tr><tr><td><code>spark-engine-tests.log</code></td><td>25 focused engine-test results</td><td class='num'>527.9 KiB</td><td><code class='hash'>1713d90849e84b83...</code></td></tr><tr><td><code>spark-root.txt</code></td><td>Supporting validation evidence</td><td class='num'>47 B</td><td><code class='hash'>37e83d74c7f87d26...</code></td></tr><tr><td><code>stages.csv</code></td><td>Stage duration, exit code, and completion time</td><td class='num'>608 B</td><td><code class='hash'>813a6cb766cd8b33...</code></td></tr><tr><td><code>started-utc.txt</code></td><td>Supporting validation evidence</td><td class='num'>21 B</td><td><code class='hash'>7587b5afb9726ac7...</code></td></tr><tr><td><code>system-packages-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>818 B</td><td><code class='hash'>c7d145f020bbc391...</code></td></tr><tr><td><code>system-packages.log</code></td><td>Supporting validation evidence</td><td class='num'>683 B</td><td><code class='hash'>1cab02798426c353...</code></td></tr><tr><td><code>validation-harness-build-resources.txt</code></td><td>GNU time resource measurements for this stage</td><td class='num'>919 B</td><td><code class='hash'>08eccc401de6e123...</code></td></tr><tr><td><code>validation-harness-build.log</code></td><td>Validation harness compilation</td><td class='num'>143.2 KiB</td><td><code class='hash'>05e6295ceafda7a6...</code></td></tr></tbody></table>
+  </details>
+  <h3>Source identity and final state</h3>
+  <table><tbody>
+    <tr><th>Source ZIP SHA-256</th><td><code>0c61efecb30fcef70835205a108a4ffbe09e780dd986983905da5936e0146dbe</code></td></tr>
+    <tr><th>Successful run</th><td>2026-11-17T00:29:56Z through 2026-11-17T01:04:30Z</td></tr>
+    <tr><th>Final marker</th><td><code>RESULT=ALL_CHECKS_PASSED</code></td></tr>
+    <tr><th>Private evidence</th><td><code>SPARK-61672/aws-validation/run-20261116/</code></td></tr>
+  </tbody></table>
+</section>
+
+<section id="security" class="card">
+  <div class="eyebrow">Safety and cleanup</div><h2>No temporary compute remains</h2>
+  <div class="grid-3">
+    <div class="callout success"><strong>Compute</strong><br>The retained final cleanup check found no active SPARK-61672-tagged instances.</div>
+    <div class="callout success"><strong>Access</strong><br>The listed temporary security groups were absent.</div>
+    <div class="callout success"><strong>Identity</strong><br>The temporary IAM role and instance profile were absent.</div>
+  </div>
+  <p>Private S3 evidence and local reports were intentionally retained. No presigned URL or credential value is included here.</p>
+</section>
+
+<section id="limits" class="card">
+  <div class="eyebrow">Claim boundary</div><h2>What this proves and what remains</h2>
+  <div class="grid-2">
+    <div><h3>Proven here</h3><ul><li>Custom Spark 4.3.0 source builds on AWS.</li><li>All 25 focused engine tests pass.</li><li>Native logical and physical async plan nodes execute.</li><li>Real Bedrock requests return correct, ordered results and a request ID.</li><li>Async overlap reduced measured wall time by 6.59x.</li><li>One million surrounding Spark rows can be processed while model work is bounded.</li><li>Provider harness reports zero failures.</li></ul></div>
+    <div><h3>Still requires qualification</h3><ul><li>Multi-node driver and executor deployment.</li><li>Cross-executor request and rate ceilings.</li><li>Executor-loss, stage-retry, and speculation behavior.</li><li>Distributed dependency and role propagation.</li><li>Multi-host cancellation and cleanup.</li><li>Approved external OpenAI-compatible live endpoint.</li><li>Broader Spark SQL regression coverage.</li></ul></div>
+  </div>
+  <div class="callout"><strong>Conclusion:</strong> this is a strong single-host POC validation in Spark local mode on real AWS infrastructure. It is not a multi-node production qualification.</div>
+</section>
+</main>
+<footer>SPARK-61672 AWS validation report. Generated from retained evidence. No credentials embedded.</footer>
+</body></html>

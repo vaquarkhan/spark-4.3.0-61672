@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="SPARK-61672 SPIP results and benefits">
+<title>SPARK-61672 SPIP Results</title>
+<style>
+:root{--ink:#0b1b3a;--muted:#4a5a73;--line:#d7e1f0;--bg:#f4f8fd;--blue:#2563eb;--cyan:#0891b2;--orange:#ea580c;--purple:#7c3aed;--green:#0f766e;--soft:#eef5ff;}
+*{box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,Segoe UI,Arial,sans-serif;}
+a{color:var(--blue);text-decoration:none;}a:hover{text-decoration:underline;}
+nav{position:sticky;top:0;z-index:20;background:rgba(11,27,58,.97);color:#fff;box-shadow:0 2px 14px rgba(11,27,58,.25);}
+.nav-inner{max-width:1200px;margin:auto;padding:12px 26px;display:flex;gap:20px;align-items:center;overflow-x:auto;}
+.nav-title{font-weight:800;white-space:nowrap;margin-right:auto;}
+nav a{color:#dbeafe;font-size:14px;white-space:nowrap;}
+.hero{color:#fff;background:linear-gradient(125deg,#0a1830 0%,#15397a 55%,#0b6b84 100%);padding:76px 26px 66px;}
+.hero-inner,main{max-width:1200px;margin:auto;}
+.eyebrow{letter-spacing:.14em;text-transform:uppercase;font-weight:800;font-size:13px;color:#9ec5ff;}
+h1{font-size:clamp(38px,6vw,70px);line-height:1.05;margin:12px 0 18px;max-width:960px;}
+.hero p{max-width:840px;font-size:20px;color:#dbeafe;}
+.hero-badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;}
+.badge{border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.12);padding:9px 14px;border-radius:999px;font-weight:700;}
+main{padding:34px 26px 70px;}
+section{scroll-margin-top:72px;margin:26px 0;}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:0 8px 28px rgba(16,32,64,.07);}
+h2{font-size:32px;margin:0 0 16px;}h3{font-size:22px;margin:26px 0 12px;}h4{margin:4px 0 8px;font-size:18px;}
+.lead{font-size:19px;color:var(--muted);}
+.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:24px 0;}
+.metric{padding:22px;border-radius:15px;background:#fff;border-top:5px solid var(--blue);box-shadow:0 5px 18px rgba(16,32,64,.08);}
+.metric:nth-child(2){border-color:var(--orange);}.metric:nth-child(3){border-color:var(--cyan);}.metric:nth-child(4){border-color:var(--purple);}
+.metric strong{display:block;font-size:34px;line-height:1.12;}.metric span{color:var(--muted);}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;}
+.benefit{padding:20px;border-radius:14px;background:var(--soft);border:1px solid var(--line);}
+.benefit-icon{font-size:26px;margin-bottom:8px;}
+.benefit h4{color:var(--ink);}.benefit p{margin:0;color:var(--muted);font-size:14px;}
+.win{padding:16px 18px;border-left:5px solid var(--green);background:#ecfdf5;border-radius:8px;margin:12px 0;}
+.figure{margin:22px 0;}.figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:14px;background:#fff;}
+.figure figcaption{color:var(--muted);text-align:center;margin-top:9px;font-size:14px;}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;}
+th{background:#eaf2fd;text-align:left;}th,td{border-bottom:1px solid var(--line);padding:11px 12px;overflow-wrap:anywhere;word-break:break-word;}
+code{overflow-wrap:anywhere;word-break:break-word;}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
+.status{display:inline-block;border-radius:999px;padding:3px 10px;font-weight:800;font-size:12px;color:#065f46;background:#d1fae5;}
+.pill{display:inline-block;border-radius:999px;padding:4px 12px;background:#dbeafe;color:#1e3a8a;font-weight:700;font-size:13px;margin:3px;}
+footer{background:var(--ink);color:#cbd5e1;padding:26px;text-align:center;}
+@media(max-width:950px){.metric-grid,.grid-3,.grid-2{grid-template-columns:1fr;}h1{font-size:42px;}}
+@media print{nav{display:none;}body{background:#fff;}.card{break-inside:avoid;box-shadow:none;}}
+</style></head>
+<body>
+<nav><div class="nav-inner">
+  <div class="nav-title">SPARK-61672 SPIP</div>
+  <a href="#headline">Headline</a><a href="#benefits">Benefits</a><a href="#results">Results</a>
+  <a href="#threeway">3-Way</a><a href="#unified">4-Way 1M</a><a href="#cost">Cost</a><a href="#throughput">Throughput</a><a href="#scale">Scale</a><a href="#quality">Quality</a><a href="#scope">Scope</a>
+</div></nav>
+<header class="hero"><div class="hero-inner">
+  <div class="eyebrow">SPIP results and benefits</div>
+  <h1>Native async Spark SQL, measured against live Bedrock</h1>
+  <p>In a controlled 16-prompt test, eight in-flight calls reduced wall time from 4,350 ms to 660 ms (6.59x). Separate one-million-row runs measured blocking, threaded pandas, native async, bounded call reuse, and a representative mapInArrow + asyncio path with explicit method boundaries.</p>
+  <div class="hero-badges"><span class="badge">6.59x vs serial control</span><span class="badge">100% measured output checks</span><span class="badge">1,000,000 generated rows</span><span class="badge">25/25 focused engine tests</span><span class="badge">67 executed AWS provider validations + 1 skip</span></div>
+</div></header>
+<main>
+
+<section id="headline" class="card">
+  <div class="eyebrow">Headline outcome</div><h2>Every required original-run stage passed</h2>
+  <p class="lead">The custom Spark source built on AWS, all 25 focused async-engine tests passed, the native planner executed real Bedrock calls, and the measured queries preserved the requested <code>ORDER BY</code> output.</p>
+  <div class="metric-grid">
+    <div class="metric"><strong>6.59x</strong><span>Faster wall-clock on real Bedrock</span></div>
+    <div class="metric"><strong>40/40</strong><span>Correct and in input order</span></div>
+    <div class="metric"><strong>1,000,000</strong><span>Rows processed in one run</span></div>
+    <div class="metric"><strong>67 + 1</strong><span>Executed AWS provider validations plus one live-skip marker; zero failures</span></div>
+  </div>
+  <div class="figure"><img src="images/01-executive-dashboard.png" alt="Executive dashboard"><figcaption>Validation dashboard generated from measured evidence.</figcaption></div>
+</section>
+
+<section id="benefits" class="card">
+  <div class="eyebrow">Why it matters</div><h2>Key benefits</h2>
+  <div class="grid-3">
+    <div class="benefit"><div class="benefit-icon">&#9889;</div><h4>Major speedup</h4><p>Overlapping in-flight calls cut the same Bedrock workload from 4,350 ms to 660 ms, a 6.59x improvement.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#9881;</div><h4>Native to Spark</h4><p>AI calls run as first-class <code>EvalAsyncFunctions</code> and <code>AsyncEval</code> plan nodes in the optimizer and planner.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#10003;</div><h4>Accurate and ordered</h4><p>Every response was correct and returned in input order, so performance never traded away correctness.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128202;</div><h4>Scales with the query</h4><p>Filters and LIMIT shrink model-facing work, so AI cost tracks the query rather than raw dataset size.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128279;</div><h4>Provider-neutral</h4><p>One SPI drives Amazon Bedrock and OpenAI-compatible providers. Switching is configuration, not a rewrite.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128274;</div><h4>Validated POC controls</h4><p>Allowlists, configured limits, retries, circuit breaking, cancellation, and sanitized row-level provider-call errors were exercised in focused checks.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128273;</div><h4>No secrets in code</h4><p>Runs on the cloud instance role through the AWS SDK default chain. No key or token in source or config.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128181;</div><h4>Predictable cost</h4><p>Expensive model calls are bounded by ordinary relational operators and a configurable concurrency ceiling.</p></div>
+    <div class="benefit"><div class="benefit-icon">&#128640;</div><h4>Ready for further qualification</h4><p>The single-host POC is reproducible; multi-node ceilings, retries, distribution, and cancellation remain explicit qualification work.</p></div>
+  </div>
+</section>
+
+<section id="results" class="card">
+  <div class="eyebrow">Measured results</div><h2>What the run produced</h2>
+  <div class="win"><strong>Clean build and focused green suite.</strong> The custom Spark engine built successfully and all 25 focused async-engine tests passed with no failures.</div>
+  <div class="win"><strong>Native Spark SQL to real Bedrock.</strong> The analyzer resolved the function, the optimized plan showed <code>EvalAsyncFunctions</code>, the physical plan showed <code>AsyncEval</code>, and a real service request id was returned.</div>
+  <div class="win"><strong>Both providers built.</strong> The Amazon Bedrock and OpenAI-compatible modules compiled against the shared SPI.</div>
+  <h3>Stage outcomes</h3>
+  <table><thead><tr><th>Stage</th><th class="num">Duration</th><th>Result</th></tr></thead><tbody><tr><td>System Packages</td><td class='num'>1 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Source Download</td><td class='num'>1 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Source Extract</td><td class='num'>0 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Spark Engine Install</td><td class='num'>598 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Spark Engine Tests</td><td class='num'>542 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Bedrock Provider Install</td><td class='num'>13 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Openai Provider Install</td><td class='num'>7 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Validation Harness Build</td><td class='num'>9 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Spark Sql Proof</td><td class='num'>8 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Throughput Benchmark</td><td class='num'>11 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Large Dataset Validation</td><td class='num'>10 s</td><td><span class='status'>PASS</span></td></tr><tr><td>Provider Conformance</td><td class='num'>37 s</td><td><span class='status'>PASS</span></td></tr></tbody></table>
+  <div class="figure"><img src="images/04-stage-durations.png" alt="Stage durations"><figcaption>Every stage completed successfully.</figcaption></div>
+  <div class="figure"><img src="images/05-validation-scorecard.png" alt="Validation scorecard"><figcaption>Every required result marker passed.</figcaption></div>
+</section>
+
+<section id="threeway" class="card">
+  <div class="eyebrow">Head-to-head</div><h2>Four modes across three implementation families</h2>
+  <p class="lead">The JVM measurements and corrected pandas-only rerun used the same EC2 host, model, region, prompt definition, and single task. The first pandas orchestration failed before measurement; the corrected rerun produced the pandas rows. Every mode returned 120/120 correct and ordered output.</p>
+  <table><thead><tr><th>Approach</th><th>Wall time</th><th>Throughput</th><th>Speedup</th><th>Manual concurrency</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Blocking scalar UDF</td><td>28,560 ms</td><td>4.20 rows/s</td><td>1.00x</td><td>No</td><td>Serial only</td></tr>
+    <tr><td>Pandas UDF, sequential</td><td>29,360 ms</td><td>4.09 rows/s</td><td>0.97x</td><td>No</td><td>Yes</td></tr>
+    <tr><td>Pandas UDF, threaded (8)</td><td>4,416 ms</td><td>27.17 rows/s</td><td>6.47x</td><td>Yes, user-written</td><td>Yes</td></tr>
+    <tr><th>AsyncScalarFunction (this SPIP)</th><th>3,963 ms</th><th>30.28 rows/s</th><th>7.21x</th><th>No</th><th>Engine</th></tr>
+  </tbody></table>
+  <div class="figure"><img src="images/09-three-way-comparison.png" alt="Three-way comparison"><figcaption>Same model, region, prompts, and single task.</figcaption></div>
+  <div class="figure"><img src="images/10-three-way-speedup.png" alt="Three-family speedup"><figcaption>Native async led this 120-row measurement; later 1,000-row runs put pandas ahead, so no universal winner is claimed.</figcaption></div>
+  <div class="win"><strong>Measured result:</strong> native async reached the hand-written concurrency throughput range in this workload with no user-written thread pool and partition-local ordered row association.</div>
+</section>
+
+<section id="unified" class="card">
+  <div class="eyebrow">Shared data definition, four modes</div><h2>One-million-row benchmark on one host</h2>
+  <p class="lead">Two Spark applications regenerated the same deterministic 1,000,000-row definition and prompt mapping on one EC2 host. JVM modes used the custom Spark 4.3.0 build; pandas used PySpark 4.0.1. The modes share a host and inputs, not one materialized DataFrame or one Spark version.</p>
+  <table><thead><tr><th>Approach</th><th>In flight</th><th>Logical calls or timed rows</th><th>Reused</th><th>Wall time</th><th>Throughput</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Blocking scalar UDF</td><td>1</td><td>1,000</td><td>0</td><td>227,049 ms</td><td>4.40 rows/s</td><td>Yes</td></tr>
+    <tr><td>Pandas UDF, threaded (8)</td><td>8</td><td>1,000</td><td>0</td><td>26,714 ms</td><td>37.43 rows/s</td><td>Yes</td></tr>
+    <tr><td>AsyncScalarFunction, dedup off</td><td>8</td><td>1,000</td><td>0</td><td>30,755 ms</td><td>32.52 rows/s</td><td>Yes</td></tr>
+    <tr><th>AsyncScalarFunction, dedup on</th><th>8</th><th>20</th><th>980</th><th>693 ms</th><th>1443.00 rows/s</th><th>Yes</th></tr>
+  </tbody></table>
+  <div class="figure"><img src="images/12-unified-four-way-1m.png" alt="One-million-row four-mode benchmark"><figcaption>Same deterministic definition on one host, regenerated under custom Spark 4.3.0 and released PySpark 4.0.1.</figcaption></div>
+  <div class="win"><strong>Measured result:</strong> native async without reuse was 7.4x faster than blocking. Threaded pandas was faster than native async in this run. With optional bounded task-cache reuse, native logical calls fell from 1,000 to 20 (98%); this is an operator metric, not an AWS billing record.</div>
+  <h3>Reproduced on a second independent run</h3>
+  <p class="lead">The whole benchmark was run again on a separate EC2 instance with a clean build from the same verified source. Both runs agree.</p>
+  <table><thead><tr><th>Approach</th><th>Run 1 wall</th><th>Run 2 wall</th><th>Logical calls or timed rows</th><th>Correct and ordered</th></tr></thead><tbody>
+    <tr><td>Blocking scalar UDF</td><td>227,049 ms</td><td>228,413 ms</td><td>1,000</td><td>1000/1000 both</td></tr>
+    <tr><td>Pandas UDF, threaded (8)</td><td>26,714 ms</td><td>25,742 ms</td><td>1,000</td><td>1000/1000 both</td></tr>
+    <tr><td>AsyncScalarFunction, dedup off</td><td>30,755 ms</td><td>29,878 ms</td><td>1,000</td><td>1000/1000 both</td></tr>
+    <tr><th>AsyncScalarFunction, dedup on</th><th>693 ms</th><th>863 ms</th><th>20</th><th>1000/1000 both</th></tr>
+  </tbody></table>
+  <div class="figure"><img src="images/13-two-run-reproducibility.png" alt="Two independent AWS runs"><figcaption>Correctness and native logical-call metrics repeated. Timing varied with host and service conditions.</figcaption></div>
+  <div class="win"><strong>Repeated measured outcome:</strong> 1000/1000 correct and ordered output in every mode, plus 20 native logical calls and 980 reused rows in both dedup runs. The 98% logical-call reduction is not a billing guarantee.</div>
+  <h3>mapInArrow plus asyncio: direct Python comparison</h3>
+  <p class="lead">Benchmark 6 directly compared a representative mapInArrow plus asyncio implementation with threaded pandas on one EC2 host under PySpark 4.0.1.</p>
+  <table><thead><tr><th>Direct same-host mode</th><th>Wall time</th><th>Observed throughput</th><th>Correct and ordered</th></tr></thead><tbody>
+    <tr><td>mapInArrow + asyncio</td><td>24,799 ms</td><td>40.32 rows/s</td><td>1000/1000</td></tr>
+    <tr><td>Pandas UDF, threaded (8)</td><td>26,835 ms</td><td>37.26 rows/s</td><td>1000/1000</td></tr>
+  </tbody></table>
+  <div class="figure"><img src="images/14-mapinarrow-concurrency.png" alt="Direct same-host Python concurrency measurement"><figcaption>Only the two same-host PySpark 4.0.1 modes are ranked. Native async ran on another host and custom Spark build.</figcaption></div>
+  <div class="win"><strong>Method boundary:</strong> the mapInArrow warm-up may have processed the full Arrow batch before timing. Its <code>calls=1000</code> field is inferred from timed rows, not a server-side counter. Native async without reuse measured 30,755 ms (32.52 rows/s) on another host; that is context, not a controlled ranking. A direct ranking requires all modes on the same host and Spark build with repeated trials.</div>
+</section>
+
+<section id="cost" class="card">
+  <div class="eyebrow">Logical-call reuse</div><h2>Opt-in bounded task cache reduced logical calls 98%</h2>
+  <p class="lead">At most <code>deduplicateMaxEntries</code> keys per function/task are cached. Matches share the first future; unseen keys after saturation are not cached. Off by default because result sharing changes generative-call semantics.</p>
+  <table><thead><tr><th>Mode</th><th>Operator-reported logical calls</th><th>Reused</th><th>Wall time</th><th>Correct</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Deduplication OFF (default)</td><td>1,000</td><td>0</td><td>32,034 ms</td><td>1000/1000</td><td>Yes</td></tr>
+    <tr><th>Deduplication ON (opt-in)</th><th>20</th><th>980</th><th>823 ms</th><th>1000/1000</th><th>Yes</th></tr>
+  </tbody></table>
+  <div class="figure"><img src="images/11-dedup-cost-ab.png" alt="Logical-call reuse A/B"><figcaption>1,000,000 generated rows, 1,000 timed output rows, 20 prompt values: 98% fewer operator-reported logical calls.</figcaption></div>
+  <div class="win"><strong>Boundary:</strong> this is not an AWS billing record. Warm-ups and SDK retries are outside the metric; pricing determines billed cost.</div>
+</section>
+
+<section id="throughput" class="card">
+  <div class="eyebrow">Performance</div><h2>6.59x faster on real Amazon Bedrock</h2>
+  <p class="lead">Identical model, prompts, JVM, and partition count. Only the in-flight concurrency changed.</p>
+  <table><thead><tr><th>Mode</th><th>In flight</th><th>Wall time</th><th>Throughput</th><th>Correct</th><th>Ordered</th></tr></thead><tbody>
+    <tr><td>Serial baseline</td><td>1</td><td>4,350 ms</td><td>3.68 rows/s</td><td>16/16</td><td>Yes</td></tr>
+    <tr><td>Async engine</td><td>8</td><td>660 ms</td><td>24.24 rows/s</td><td>16/16</td><td>Yes</td></tr>
+    <tr><th>Improvement</th><th></th><th>6.59x</th><th>6.59x</th><th>All</th><th>Yes</th></tr>
+  </tbody></table>
+  <div class="figure"><img src="images/02-throughput-comparison.png" alt="Throughput comparison"><figcaption>Lower wall time and higher throughput with async concurrency.</figcaption></div>
+</section>
+
+<section id="scale" class="card">
+  <div class="eyebrow">Scale</div><h2>Proven at one-million-row scale</h2>
+  <p class="lead">Spark generated, cached, grouped, and checksummed 1,000,000 deterministic records, then returned 40 correct, ordered model responses after a predicate and LIMIT.</p>
+  <div class="grid-2">
+    <div class="figure"><img src="images/03-million-row-funnel.png" alt="Processing funnel"><figcaption>Relational operators bound the model-facing work.</figcaption></div>
+    <div class="figure"><img src="images/06-processing-performance.png" alt="Processing timing"><figcaption>Fast processing and live-call timing.</figcaption></div>
+  </div>
+  <table><thead><tr><th>Metric</th><th class="num">Value</th><th>Result</th></tr></thead><tbody><tr><td>Dataset Rows</td><td class='num'>1,000,000</td><td><span class='status'>PASS</span></td></tr><tr><td>Dataset Partitions</td><td class='num'>32</td><td><span class='status'>PASS</span></td></tr><tr><td>Materialize Elapsed Ms</td><td class='num'>3,867</td><td><span class='status'>PASS</span></td></tr><tr><td>Aggregate Elapsed Ms</td><td class='num'>415</td><td><span class='status'>PASS</span></td></tr><tr><td>Id Checksum</td><td class='num'>499,999,500,000</td><td><span class='status'>PASS</span></td></tr><tr><td>Null Review Rows</td><td class='num'>10,310</td><td><span class='status'>PASS</span></td></tr><tr><td>Balanced Star Groups</td><td class='num'>5</td><td><span class='status'>PASS</span></td></tr><tr><td>Candidate Rows Before Limit</td><td class='num'>100</td><td><span class='status'>PASS</span></td></tr><tr><td>Optimized Has Async Node</td><td class='num'>Yes</td><td><span class='status'>PASS</span></td></tr><tr><td>Executed Has Async Node</td><td class='num'>Yes</td><td><span class='status'>PASS</span></td></tr><tr><td>Plan Has Limit</td><td class='num'>Yes</td><td><span class='status'>PASS</span></td></tr><tr><td>Plan Has Filter</td><td class='num'>Yes</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Logical Requests</td><td class='num'>40</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Elapsed Ms</td><td class='num'>2,482</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Rows Per Second</td><td class='num'>16.1160</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Correct Rows</td><td class='num'>40</td><td><span class='status'>PASS</span></td></tr><tr><td>Live Ordered Rows</td><td class='num'>Yes</td><td><span class='status'>PASS</span></td></tr></tbody></table>
+</section>
+
+<section id="quality" class="card">
+  <div class="eyebrow">Quality and safety</div><h2>67 executed AWS provider validations passed</h2>
+  <p class="lead">The AWS harness recorded 67 executed validations, one intentional OpenAI-compatible live skip marker, and zero failures.</p>
+  <div>
+    <span class="pill">Sessions cannot supply credentials</span><span class="pill">Endpoint allowlists</span>
+    <span class="pill">Model allowlists</span><span class="pill">Per-task active-call ceiling</span>
+    <span class="pill">Response-size caps</span><span class="pill">Retry policies</span>
+    <span class="pill">Circuit breaker</span><span class="pill">Cancellation</span>
+    <span class="pill">Sanitized provider-call errors</span><span class="pill">Shared-client reuse</span>
+    <span class="pill">Live Bedrock request id</span>
+  </div>
+  <div class="figure"><img src="images/07-bedrock-request-budget.png" alt="Request budget"><figcaption>Cost stayed well within the approved request budget.</figcaption></div>
+  <div class="figure"><img src="images/08-resource-footprint.png" alt="Resource footprint"><figcaption>Efficient on a single, modest instance.</figcaption></div>
+</section>
+
+<section id="scope" class="card">
+  <div class="eyebrow">Validated scope</div><h2>What this run confirms</h2>
+  <p class="lead">This report presents single-host Spark local-mode validations on real AWS infrastructure. Benchmark values come from named evidence files; cross-run comparisons are labeled as context.</p>
+  <div class="win"><strong>Confirmed:</strong> custom Spark build, 25 focused async-engine tests, native async plan nodes, live Bedrock results, a 6.59x serial-control measurement, one-million-row data generation, and 67 executed AWS provider validations plus one skip marker.</div>
+  <div class="win"><strong>Natural next step:</strong> a multi-node cluster run to extend these results across distributed executors, building directly on this validated foundation.</div>
+</section>
+</main>
+<footer>SPARK-61672 SPIP results. Generated from measured validation evidence. No credentials included.</footer>
+</body></html>

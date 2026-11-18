@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="SPARK-61672 AWS validation reports">
+<title>SPARK-61672 AWS Validation</title>
+<style>
+:root{--ink:#0b1b3a;--muted:#52627a;--line:#d7e1f0;--blue:#2563eb;--green:#0f766e}
+*{box-sizing:border-box}body{margin:0;background:#f4f8fd;color:var(--ink);font:16px/1.6 Segoe UI,Arial,sans-serif}
+.hero{padding:64px 24px;color:white;background:linear-gradient(125deg,#0a1830,#15397a 58%,#0b6b84)}
+.inner,main{max-width:1050px;margin:auto}h1{font-size:clamp(36px,6vw,62px);line-height:1.05;margin:10px 0}
+.hero p{max-width:790px;color:#dbeafe;font-size:19px}main{padding:36px 24px 70px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 8px 26px rgba(16,32,64,.08)}
+.card p{color:var(--muted);min-height:82px}a.button{display:block;padding:12px 18px;border-radius:10px;background:var(--blue);color:white;text-align:center;text-decoration:none;font-weight:700}a.alt{background:var(--green)}
+.note{margin-top:24px;padding:18px 20px;border-left:5px solid var(--green);background:#ecfdf5;border-radius:8px;color:#355064}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<header class="hero"><div class="inner"><div>SPARK-61672</div><h1>Native asynchronous Spark SQL functions</h1><p>Self-contained AWS validation results with measured benchmark boundaries and implementation evidence.</p></div></header>
+<main><div class="grid">
+<section class="card"><h2>Full validation report</h2><p>Implementation, methodology, tests, AWS evidence, benchmark results, limitations, and 14 referenced charts.</p><a class="button" href="SPARK-61672-AWS-VALIDATION-FULL-REPORT.html">Open full report</a></section>
+<section class="card"><h2>SPIP results</h2><p>A shorter results-focused view of the implemented POC and measured validation.</p><a class="button alt" href="SPARK-61672-SPIP-RESULTS.html">Open SPIP results</a></section>
+</div><div class="note">This folder contains only GitHub Pages files and the images referenced by the two reports. No build step or external assets are required.</div></main>
+</body></html>
